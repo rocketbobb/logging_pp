@@ -20,7 +20,6 @@ data/archive
 data/auxiliary
 !data/sample/
 models/archive
-test/model/test/*
 .idea
 config/current_production_config.yml
 config/local
