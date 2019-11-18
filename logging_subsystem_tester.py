@@ -31,19 +31,19 @@ def main():
     logging.info('Setup logging using ops_logging package.')
     logging.getLogger().setLevel(logging.INFO)
 
-    """Illustrate usage of logging_pp."""
+    """Illustrate usage of logging_subsystem."""
     print('starting logging subsystem test, running as main')
     # issue a couple of logging messages using root logger w/defaults
     logging.critical('root logger example1')
     logging.warning('root logger example2')
 
     # log messages to stderr, messages to console, defaults to INFO
-    #logging_pp.init()
+    #logging_subsystem.init()
 
     print('\nlogging init call = init()')
     loggerpp.setLogger()
     # Generate some log messages. ( debug should not appear )
-    logging.critical('*1* This function illustrates how to use the logging_pp extension package.')
+    logging.critical('*1* This function illustrates how to use the logging_subsystem extension package.')
     logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('This is a sample debug message')
@@ -52,14 +52,14 @@ def main():
     # log messages to local file and messages to console
     print('\nlogging init call = init(logdir=\'logs\')')
     loggerpp.setLogger(logdir='logs')
-    logging.critical('*2* This function illustrates how to use the logging_pp extension package.')
+    logging.critical('*2* This function illustrates how to use the logging_subsystem extension package.')
     logging.info('Default loglevel is 20 (INFO)')
     logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('This is a sample debug message')
     logging.info('This is a sample info message')
     sleep(2)
-    logging.critical('*2* This function illustrates how to use the logging_pp extension package.')
+    logging.critical('*2* This function illustrates how to use the logging_subsystem extension package.')
     logging.info('Default loglevel is 20 (INFO)')
     logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
@@ -71,7 +71,7 @@ def main():
     sleep(2)
     print('\nlogging init call = init(logdir=\'logs\',loglevel=10)')
     loggerpp.setLogger(logdir='logs',loglevel=10)
-    logging.critical('*3* This function illustrates how to use the logging_pp package.')
+    logging.critical('*3* This function illustrates how to use the logging_subsystem package.')
     logging.info('loglevel 10 (Debug) file should have 3 DEBUG messages from setup')
     logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
@@ -84,7 +84,7 @@ def main():
     # log messages to file in directory [logs] and messages to console
     print('\nlogging init call = init(logdir=\'logs\',loglevel=30)')
     loggerpp.setLogger(logdir='logs',loglevel=30)
-    logging.critical('*4* This function illustrates how to use the logging_pp package.')
+    logging.critical('*4* This function illustrates how to use the logging_subsystem package.')
     logging.info('loglevel 10 (Debug) file should have 3 DEBUG messages from setup')
     logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
