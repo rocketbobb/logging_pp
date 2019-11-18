@@ -19,6 +19,13 @@ import os
 import sys
 import logging
 import datetime
+from time import sleep
+
+try:
+    import colorlog
+    HAVE_COLORLOG = True
+except ImportError:
+    HAVE_COLORLOG = False
 
 def init(logdir=None, loglevel=logging.INFO):
     """ Set up ops logging (console and logfile).
@@ -34,6 +41,8 @@ def init(logdir=None, loglevel=logging.INFO):
         If no directory is given, the logs are written to a folder called "logs" in the working directory. 
     """
     # TODO 2019-04-10: add support for syslog
+
+    logfile = None
 
     def isBlank (s):
         return not (s and s.strip())
@@ -67,10 +76,8 @@ def init(logdir=None, loglevel=logging.INFO):
     logging.debug(pgmname)
     logging.debug(runid)
     
-    # output to stderr
-    if isBlank(logdir):
-        logfile=None
-    else:
+    # output to stderr only
+    if isNotBlank(logdir):
     # rnb ( except can't write) create dir for logfiles
     # rnb make sure logdir is a directory
         if logdir == '.':
@@ -80,8 +87,10 @@ def init(logdir=None, loglevel=logging.INFO):
             if not os.path.exists(logdir):
                 os.mkdir(logdir)
             logdir += '/'
+
         logfile=logdir + pgmname + '_' + runid + '.log'
 
+    logging.debug(logfile)
     #
     # create logger  ( logger.propagate = False )
     # also add nullhandler to prevent exception on addhandler test
@@ -105,23 +114,36 @@ def init(logdir=None, loglevel=logging.INFO):
             fhtest=True
             logger.removeHandler(handlers)
         if isinstance(handlers,logging.StreamHandler): chtest=True
-    
     if logfile != None:
         fh = logging.FileHandler(logfile)
         fh.setLevel(loglevel)
-        fh_formatter = logging.Formatter('%(asctime)s %(levelname)s' + ' [' + pgmname + '] ' + '[%(funcName)s] %(message)s', datefmt='%Y-%m-%dT%I:%M:%S.%06d%z')
+        fh_formatter = logging.Formatter('%(asctime)s %(levelname)s' + ' [' + pgmname + ' : ' 
+                                                                    + runid + ']' 
+                                                                    + ' [%(funcName)s] %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
+        fh_formatter.default_msec_format = '%s.%03d'
         fh.setFormatter(fh_formatter)
         logger.addHandler(fh)
-
     if not chtest:
         # create console formatter (sys.stderr)           
         # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         ch_formatter = logging.Formatter('%(levelname)s: %(message)s')
+
+        """
+        format_str = '%(asctime)s - %(levelname)-8s - %(message)s'
+        date_format = '%Y-%m-%d %H:%M:%S
+        if HAVE_COLORLOG:
+            cformat = '%(log_color)s' + format_str
+            colors = {'DEBUG': 'reset',
+                      'INFO': 'reset',
+                      'WARNING': 'bold_yellow',
+                      'ERROR': 'bold_red',
+                      'CRITICAL': 'bold_red'}
+            ch_formatter = ColoredFormatter(cformat, date_format,log_colors=colors)
+        """
         # add formatter to ch
         ch.setFormatter(ch_formatter)
         # add ch to logger   not sure about multiple
         logger.addHandler(ch)
-
     # logging framework debug info
     logging.debug('logging_pp setup complete')
     logging.debug('loglevel [{}]'.format(loglevel))
@@ -132,36 +154,48 @@ if __name__ == '__main__':
     #sys.path.append('.')
     import logging_pp
     """Illustrate usage of logging_pp."""
-
+    print('starting logging subsystem test, running as main')
     # issue a couple of logging messages using root logger w/defaults
     logging.critical('root logger example1')
     logging.warning('root logger example2')
 
     # log messages to stderr, messages to console, defaults to INFO
     #logging_pp.init()
+    print('\nlogging init call = init()')
     init()
     # Generate some log messages. ( debug should not appear )
     logging.critical('*1* This function illustrates how to use the logging_pp extension package.')
-    logging.warning('All messages are sent to both the console and either to STDERR or a logfil')
+    logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('This is a sample debug message')
     logging.info('This is a sample info with %s parm','string')
 
+
     # log messages to local file and messages to console
-    init(logdir='.')
+    print('\nlogging init call = init(logdir=\'logs\')')
+    init(logdir='logs')
     logging.critical('*2* This function illustrates how to use the logging_pp extension package.')
     logging.info('Default loglevel is 20 (INFO)')
-    logging.warning('All messages are sent to both the console and either to STDERR or a logfil')
+    logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('This is a sample debug message')
     logging.info('This is a sample info message')
-
+    sleep(2)
+    logging.critical('*2* This function illustrates how to use the logging_pp extension package.')
+    logging.info('Default loglevel is 20 (INFO)')
+    logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
+    logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
+    logging.debug('This is a sample debug message')
+    logging.info('This is a sample info message')    
     # log messages to file in directory [logs] and messages to console
     # each call creates a new file
+
+    sleep(2)
+    print('\nlogging init call = init(logdir=\'logs\',loglevel=10)')
     init(logdir='logs',loglevel=10)
     logging.critical('*3* This function illustrates how to use the logging_pp package.')
     logging.info('loglevel 10 (Debug) file should have 3 DEBUG messages from setup')
-    logging.warning('All messages are sent to both the console and either to STDERR or a logfil')
+    logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('This is a sample debug message')
     logging.info('This is a sample info message')
@@ -170,10 +204,11 @@ if __name__ == '__main__':
     logging.info('Info should not be recorded')
 
     # log messages to file in directory [logs] and messages to console
+    print('\nlogging init call = init(logdir=\'logs\',loglevel=30)')
     init(logdir='logs',loglevel=30)
     logging.critical('*4* This function illustrates how to use the logging_pp package.')
     logging.info('loglevel 10 (Debug) file should have 3 DEBUG messages from setup')
-    logging.warning('All messages are sent to both the console and either to STDERR or a logfil')
+    logging.warning('All messages are sent to both the console and either to STDERR or a logfile')
     logging.warning('The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('This is a sample debug message')
 

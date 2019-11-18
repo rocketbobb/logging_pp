@@ -49,6 +49,7 @@ def main():
     logging_pp.init(logdir='logs', loglevel=logging.INFO)
 
     logging.info('Setup logging using ops_logging package.')
+    sys.exit(0)
     logging.getLogger().setLevel(logging.INFO)
     
     logging.info('Setup')
