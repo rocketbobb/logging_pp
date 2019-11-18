@@ -1,0 +1,4 @@
+2019-11-18T15:27:22-0500 CRITICAL [logging_subsystem_tester : 20191118_152722] [main] *1* This function illustrates how to use the logging_pp extension package.
+2019-11-18T15:27:22-0500 WARNING [logging_subsystem_tester : 20191118_152722] [main] All messages are sent to both the console and either to STDERR or a logfile
+2019-11-18T15:27:22-0500 WARNING [logging_subsystem_tester : 20191118_152722] [main] The logfile's name encodes the time when the program was started as a runid.
+2019-11-18T15:27:22-0500 INFO [logging_subsystem_tester : 20191118_152722] [main] This is a sample info with string parm

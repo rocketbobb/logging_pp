@@ -44,14 +44,15 @@ def main():
     # need to append sys.path
     
     sys.path.append('.')
+
+    print('importing logging_pp functions')
     import logging_pp
     # log messages to local file and messages to console
     logging_pp.init(logdir='logs', loglevel=logging.INFO)
 
-    logging.info('Setup logging using ops_logging package.')
-    sys.exit(0)
-    logging.getLogger().setLevel(logging.INFO)
-    
+    logging.info('Setup logging using logging_pp package.')
+
+    logging.getLogger().setLevel(logging.INFO)   
     logging.info('Setup')
 
     loadsummary()
