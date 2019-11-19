@@ -2,18 +2,15 @@
 # ######################################################################
 #
 # Program:  logging_subsystem_tester.py
-# Language: Python ver 3
-# Author:   Bob
 #
 # Purpose:  Tester for the logging_subsystems class
-#
-# History:  19Nov2019 Initial creation                               RNB
 #
 # Notes:
 #
 # ######################################################################
 
 import _env
+import _utils
 import sys
 import logging
 from time import sleep
@@ -79,7 +76,6 @@ def main():
     logging.critical('*2* This function illustrates how to use the logging_subsystem extension package.')
     logging.info('*2* Default loglevel is 20 (INFO)')
     logging.warning('*2* All messages are sent to both the console and either to STDERR or a logfile')
-    logging.warning('*2* The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('*2* This is a sample debug message')
     logging.info('*2* This is a sample info message')
     # log messages to file in directory [logs] and messages to console
@@ -88,16 +84,17 @@ def main():
     sleep(2)
     print('\nPhase 3 testing')
     print('logging init call = init(logdir=\'logs\',loglevel=logging.DEBUG)')
-    print(logging.DEBUG)
-    print(type(logging.DEBUG))
+    print('log level before setter', logging.getLogger().level)
     loggerpp.setLogger(logdir='logs',loglevel=logging.DEBUG)
+    print('log level after setter', logging.getLogger().level)
+    #logging.getLogger().setLevel(logging.DEBUG)
+    #print('log level', logging.getLogger().level)
     logging.critical('*3* This function illustrates how to use the logging_subsystem package.')
     logging.info('*3* loglevel 10 (Debug) file should have 3 DEBUG messages from setup')
     logging.warning('*3* All messages are sent to both the console and either to STDERR or a logfile')
-    logging.warning('*3* The logfile\'s name encodes the time when the program was started as a runid.')
     logging.debug('*3* This is a sample debug message')
     logging.info('*3* This is a sample info message')
-    #logging.getLogger().setLevel(logging.WARNING)
+    loggerpp.setLogger(loglevel=logging.WARNING)
     logging.warning('*3* Resetting logger level to warning, next info message should NOT appear')
     logging.info('*3* Info should not be recorded')
 

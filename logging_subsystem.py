@@ -2,18 +2,12 @@
 # ######################################################################
 #
 # Program:  logging_subsystem.py
-# Language: Python ver 3
-# Author:   Bob
 #
 # Purpose:  logging_subsystem setups and initializes pythons logging subsystem
 #           supports console and logfile recording
 #           formats logfile message records according to group standard
 #           datetime is ISO8601 enhanced
 #           creates a runid to uniquely track each job, includes runid in log msg
-#
-# History:  15Nov2019 Initial creation                               RNB
-#
-# Notes:    Created a logging_subsystem_tester.py program to exercise class
 #
 # ######################################################################
 
@@ -31,6 +25,7 @@ import os
 import sys
 import logging
 import datetime
+import _utils
 
 try:
     import colorlog
@@ -45,7 +40,7 @@ class LoggerPlus:
     DEFAULT_LOGDIR = 'logs'
 
     def __init__(self, logdir = None, loglevel = None):
-
+        logging.debug('Running ' + _utils.get_function_name() + '(' + str(_utils.get_function_parameters_and_values()) +')')
         if logdir is None:
             self.loglevel = self.level_str_to_int(LoggerPlus.DEFAULT_LOGDIR)
         else:
@@ -55,8 +50,6 @@ class LoggerPlus:
             self.loglevel = self.level_str_to_int(LoggerPlus.DEFAULT_LOGLEVEL)
         else:
             self.loglevel = self.level_str_to_int(loglevel)
-        print('(init) Level >>[{}]'.format(self.loglevel))
-        print('(init) Level >>[{}]'.format(self.logdir))
         """ Set up logging (console and logfile).
 
         When the logger class is initialized, it creates a logfile name, runid and the target logs direction, 
@@ -98,6 +91,7 @@ class LoggerPlus:
         self.logger.setLevel(self.loglevel)
 
     def logDir(self, logdir=None):
+        logging.info('Running ' + _utils.get_function_name() + '(' + str(_utils.get_function_parameters_and_values()) +')')
         if logdir is not None:
             self.logdir = logdir
         # output to stderr only
@@ -116,25 +110,24 @@ class LoggerPlus:
                             raise OSError("Can't create destinataion directory ($s)!" % (logdir))
                         pass
                 #self.logdir += '/'
-            print('(logdir) logdir >>{}'.format(self.logdir))
         return logdir
     
     def setLogger(self, logdir=None, loglevel=None):
-        print(type(loglevel))
-        print('(setter) logdir >>{}'.format(logdir))
-        print('(setter) loglevel >>{}'.format(loglevel))
+        logging.debug('Running ' + _utils.get_function_name() + '(' + str(_utils.get_function_parameters_and_values()) +')')
         # testing to see if setter called with logdir or loglevel changes
         if loglevel is not None:
             self.loglevel = self.level_str_to_int(loglevel)
         if logdir is not None:
             self.logdir = logdir
             self.logfile = self.logDir(self.logdir) + '/' + _env.vars['pgmname'] + '_' + self.runid + '.log'
-        print('(setter) loglevel >>{}'.format(self.loglevel))
+
         # creating console handler and set level
         #
         ch = logging.StreamHandler(sys.stderr)
         ch.setLevel(self.loglevel)
-
+        #logging.getLogger().setLevel(logging.DEBUG)
+        #print('log level', logging.getLogger().level)
+        logging.getLogger().setLevel(self.loglevel)
         # creating file handler and set level if directory provided
         #
         fhtest=False
@@ -147,19 +140,19 @@ class LoggerPlus:
 
         if self.logfile != None:
             fh = logging.FileHandler(self.logfile)
-            fh.setLevel(self.loglevel)
-            fh_formatter = logging.Formatter('%(asctime)s %(levelname)s' + ' [' + _env.vars['pgmname'] + ']' +
-                    ' [' + self.runid + ']' + ' [%(module)s] %(lineno)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
+            fh_formatter = logging.Formatter('%(asctime)s %(levelname)s' + ' [' + _env.vars['pgmname'] + '] '
+                        + self.runid + ' %(module)s %(lineno)s [%(message)s]', datefmt='%Y-%m-%dT%H:%M:%S%z')
             fh_formatter.default_msec_format = '%s.%03d'
             fh.setFormatter(fh_formatter)
             self.logger.addHandler(fh)
-        if not chtest:
+            fh.setLevel(self.loglevel)
 
+        if not chtest:
             # creating console formatter (sys.stderr)
             # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             ch_formatter = logging.Formatter('%(levelname)s: %(message)s')
-
-            """ TODO, add color support for log message level
+            """ 
+            # TODO, add color support for log message level
             format_str = '%(asctime)s - %(levelname)-8s - %(message)s'
             date_format = '%Y-%m-%d %H:%M:%S
             if HAVE_COLORLOG:
@@ -175,6 +168,7 @@ class LoggerPlus:
             ch.setFormatter(ch_formatter)
             # add ch to logger, not sure about multiple
             self.logger.addHandler(ch)
+            ch.setLevel(self.loglevel)
         # debug info for the logging framework itself
         logging.debug('logging_pp setup complete')
         logging.debug('loglevel [{}]'.format(loglevel))
@@ -184,22 +178,29 @@ class LoggerPlus:
 
     # remap log level string to int
     def level_str_to_int(self, arg):
-        print('(level_str_to_int) {}'.format(arg))
-        print('(level_str_to_int) {}'.for)
+        logging.debug('Running ' + _utils.get_function_name() + '(' + str(_utils.get_function_parameters_and_values()) +')')
         """
         remapping logging.<level> into level as per logging package requirements
         TODO validate range, may be a simpler way
         """
-        switcher = {
-            'NOTSET': 0,
-            'DEBUG':  10,
-            'INFO':   20,
-            'WARNING': 30,
-            'WARN': 30,
-            'ERROR': 40,
-            'CRITICAL': 50,
-        }
-        return switcher.get(arg, 20) 
+        if isinstance(arg, str):
+            switcher = {
+                'NOTSET': 0,
+                'DEBUG':  10,
+                'INFO':   20,
+                'WARNING': 30,
+                'WARN': 30,
+                'ERROR': 40,
+                'CRITICAL': 50,
+            }
+            level = switcher.get(arg, 20)
+        elif isinstance(arg, int):
+            levels = [0, 10, 20, 30, 40, 50]
+            if arg not in levels:
+                logging.warning('Invalid loglevel ' + _utils.get_function_name() + '(' + str(
+                    _utils.get_function_parameters_and_values()) + ')')
+            level = arg
+        return level
 
     def isBlank(self, s):
         return not (s and s.strip())
