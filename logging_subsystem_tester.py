@@ -28,7 +28,7 @@ def main():
     loggerpp = logging_subsystem.LoggerPlus(logdir='logs')
 
     # log messages to local file and messages to console
-    logging.info('Setup logging using ops_logging package.')
+    logging.info('Setup logging subsystem')
     logging.getLogger().setLevel(logging.INFO)
 
     """Illustrate usage of logging_subsystem."""
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     _env.init()
     pgmname = _env.vars['pgmname']
     print('Program Name {}'.format(_env.vars['pgmname']))
-    
+
     main()
     sys.exit(0)
 # end of program

@@ -43,7 +43,7 @@ class LoggerPlus:
             specified. If a relative path is specified, it is interpreted relative to the working directory.
             If no directory is given, the logs are written to a folder called "logs" in the working directory. 
         """
-        # TODO 2019-04-10: add support for syslog
+        # TODO 2019-04-10: add native support for syslog
 
         #if debug=='yes':
         #    logger.setLevel(logging.DEBUG)
@@ -61,6 +61,7 @@ class LoggerPlus:
             self.logfile=self.logDir(self.logdir) + _env.vars['pgmname'] + '_' + self.runid + '.log'
 
         logging.debug(self.logfile)
+
         #
         # create logger  ( logger.propagate = False )
         # also add nullhandler to prevent exception on addhandler test
@@ -68,14 +69,15 @@ class LoggerPlus:
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         self.logger = logging.getLogger()   # getting root logger
+        print(loglevel)
         self.logger.setLevel(loglevel)
 
     def logDir(self, logdir=None):
         self.logdir = logdir
-         # output to stderr only
+        # output to stderr only
         if self.isNotBlank(self.logdir):
-        # rnb ( except can't write) create dir for logfiles
-        # rnb make sure logdir is a directory
+        # TODO rnb ( except can't write) create dir for logfiles
+        # TODO rnb make sure logdir is a directory
             if self.logdir == '.':
                 self.logdir = ''
             else:
@@ -90,13 +92,13 @@ class LoggerPlus:
         if logdir is not None:
             self.logfile=self.logDir(self.logdir) + _env.vars['pgmname'] + '_' + self.runid + '.log'
             
-        # create console handler and set level
+        # creating console handler and set level
+        #
         ch = logging.StreamHandler(sys.stderr)
         ch.setLevel(loglevel)
-        
+
+        # creating file handler and set level if directory provided
         #
-        # create file handler and set level if directory provided
-        # 
         fhtest=False
         chtest=False
         for handlers in self.logger.handlers:
@@ -108,17 +110,17 @@ class LoggerPlus:
             fh = logging.FileHandler(self.logfile)
             fh.setLevel(loglevel)
             fh_formatter = logging.Formatter('%(asctime)s %(levelname)s' + ' [' + _env.vars['pgmname'] + ' : ' 
-                                                                        + self.runid + ']' 
-                                                                        + ' [%(funcName)s] %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
+                    + self.runid + ']' + ' [%(funcName)s] %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
             fh_formatter.default_msec_format = '%s.%03d'
             fh.setFormatter(fh_formatter)
             self.logger.addHandler(fh)
         if not chtest:
-            # create console formatter (sys.stderr)           
+
+            # creating console formatter (sys.stderr)
             # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             ch_formatter = logging.Formatter('%(levelname)s: %(message)s')
 
-            """
+            """ TODO, add color support for log message level
             format_str = '%(asctime)s - %(levelname)-8s - %(message)s'
             date_format = '%Y-%m-%d %H:%M:%S
             if HAVE_COLORLOG:
@@ -132,9 +134,9 @@ class LoggerPlus:
             """
             # add formatter to ch
             ch.setFormatter(ch_formatter)
-            # add ch to logger   not sure about multiple
+            # add ch to logger, not sure about multiple
             self.logger.addHandler(ch)
-        # logging framework debug info
+        # debug info for the logging framework itself
         logging.debug('logging_pp setup complete')
         logging.debug('loglevel [{}]'.format(loglevel))
         logging.debug('logfilename [{}]'.format(self.logfile))
@@ -143,6 +145,10 @@ class LoggerPlus:
 
     # remap log level string to int
     def level_str_to_int(self, arg):
+        """
+        remapping logging.<level> into level as per logging package requirements
+        TODO validate range, may be a simpler way
+        """
         switcher = {
             'NOTSET': 0,
             'DEBUG':  10,
