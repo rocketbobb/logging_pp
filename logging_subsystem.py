@@ -1,15 +1,28 @@
-"""Duallog
+#!/usr/bin/python3
+# ######################################################################
+#
+# Program:  logging_subsystem.py
+# Language: Python ver 3
+# Author:   Bob
+#
+# Purpose:  logging_subsystem setups and initializes pythons logging subsystem
+#           supports console and logfile recording
+#           formats logfile message records according to group standard
+#           datetime is ISO8601 enhanced
+#           creates a runid to uniquely track each job, includes runid in log msg
+#
+# History:  15Nov2019 Initial creation                               RNB
+#
+# Notes:    Created a logging_subsystem_tester.py program to exercise class
+#
+# ######################################################################
 
-This module contains a function "logging_pp_init()" that sets up file and console logging. All subsequent 
-log messages are sent both to the console and to a logfile. Log messages are generated via the "logging" package.
-
+"""
 Example:
-    >>> import logging_pp
+    >>> import logging_subsystem
     >>> import logging
-    >>> logging_pp.init('mylogs')
+    >>> loggerpp = logging_subsystem.LoggerPlus(logdir='logs')
     >>> logging.info('Test message')
-
-If run as main, this module illustrates the usage of logging_pp package.
 """
 
 # Import required standard libraries.
@@ -18,7 +31,6 @@ import os
 import sys
 import logging
 import datetime
-from time import sleep
 
 try:
     import colorlog
@@ -27,11 +39,24 @@ except ImportError:
     HAVE_COLORLOG = False
 
 class LoggerPlus:
-    
-    def __init__(self, logdir = None, loglevel = logging.INFO):
 
-        self.logdir = logdir
-        self.logfile = None
+    # Loglevels range from 0 to 50 with 0-NOTSET to 50-Critical
+    DEFAULT_LOGLEVEL = 'logging.INFO'
+    DEFAULT_LOGDIR = 'logs'
+
+    def __init__(self, logdir = None, loglevel = None):
+
+        if logdir is None:
+            self.loglevel = self.level_str_to_int(LoggerPlus.DEFAULT_LOGDIR)
+        else:
+            self.logdir = logdir
+
+        if loglevel is None:
+            self.loglevel = self.level_str_to_int(LoggerPlus.DEFAULT_LOGLEVEL)
+        else:
+            self.loglevel = self.level_str_to_int(loglevel)
+        print('(init) Level >>[{}]'.format(self.loglevel))
+        print('(init) Level >>[{}]'.format(self.logdir))
         """ Set up logging (console and logfile).
 
         When the logger class is initialized, it creates a logfile name, runid and the target logs direction, 
@@ -49,16 +74,17 @@ class LoggerPlus:
         #    logger.setLevel(logging.DEBUG)
         #os.environ['LOG_LEVEL']='INFO'
 
-        if os.environ.get('LOG_LEVEL'):
-            loglevel=self.level_str_to_int(os.environ.get('LOG_LEVEL'))
+        # TODO add check for LOG_LEVEL in _env.vars dictionary
+        #if os.environ.get('LOG_LEVEL'):
+        #    loglevel=self.level_str_to_int(os.environ.get('LOG_LEVEL'))
 
         self.runid=datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         
         logging.debug(_env.vars['pgmname'])
         logging.debug(self.runid)
         
-        if logdir is not None:
-            self.logfile=self.logDir(self.logdir) + _env.vars['pgmname'] + '_' + self.runid + '.log'
+        if self.logdir is not None:
+            self.logfile=self.logDir(self.logdir) + '/' + _env.vars['pgmname'] + '_' + self.runid + '.log'
 
         logging.debug(self.logfile)
 
@@ -69,11 +95,11 @@ class LoggerPlus:
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         self.logger = logging.getLogger()   # getting root logger
-        print(loglevel)
-        self.logger.setLevel(loglevel)
+        self.logger.setLevel(self.loglevel)
 
     def logDir(self, logdir=None):
-        self.logdir = logdir
+        if logdir is not None:
+            self.logdir = logdir
         # output to stderr only
         if self.isNotBlank(self.logdir):
         # TODO rnb ( except can't write) create dir for logfiles
@@ -83,19 +109,31 @@ class LoggerPlus:
             else:
                 self.logdir = logdir.strip().rstrip('\\/')
                 if not os.path.exists(logdir):
-                    os.mkdir(logdir)
-                self.logdir += '/'
+                    try:
+                        os.mkdir(logdir)
+                    except OSError as exc:
+                        if exc.errno != errno.EEXIST:
+                            raise OSError("Can't create destinataion directory ($s)!" % (logdir))
+                        pass
+                #self.logdir += '/'
+            print('(logdir) logdir >>{}'.format(self.logdir))
         return logdir
     
-    def setLogger(self, logdir=None, loglevel=logging.INFO):
-
+    def setLogger(self, logdir=None, loglevel=None):
+        print(type(loglevel))
+        print('(setter) logdir >>{}'.format(logdir))
+        print('(setter) loglevel >>{}'.format(loglevel))
+        # testing to see if setter called with logdir or loglevel changes
+        if loglevel is not None:
+            self.loglevel = self.level_str_to_int(loglevel)
         if logdir is not None:
-            self.logfile=self.logDir(self.logdir) + _env.vars['pgmname'] + '_' + self.runid + '.log'
-            
+            self.logdir = logdir
+            self.logfile = self.logDir(self.logdir) + '/' + _env.vars['pgmname'] + '_' + self.runid + '.log'
+        print('(setter) loglevel >>{}'.format(self.loglevel))
         # creating console handler and set level
         #
         ch = logging.StreamHandler(sys.stderr)
-        ch.setLevel(loglevel)
+        ch.setLevel(self.loglevel)
 
         # creating file handler and set level if directory provided
         #
@@ -106,11 +144,12 @@ class LoggerPlus:
                 fhtest=True
                 self.logger.removeHandler(handlers)
             if isinstance(handlers,logging.StreamHandler): chtest=True
+
         if self.logfile != None:
             fh = logging.FileHandler(self.logfile)
-            fh.setLevel(loglevel)
-            fh_formatter = logging.Formatter('%(asctime)s %(levelname)s' + ' [' + _env.vars['pgmname'] + ' : ' 
-                    + self.runid + ']' + ' [%(funcName)s] %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
+            fh.setLevel(self.loglevel)
+            fh_formatter = logging.Formatter('%(asctime)s %(levelname)s' + ' [' + _env.vars['pgmname'] + ']' +
+                    ' [' + self.runid + ']' + ' [%(module)s] %(lineno)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
             fh_formatter.default_msec_format = '%s.%03d'
             fh.setFormatter(fh_formatter)
             self.logger.addHandler(fh)
@@ -145,6 +184,8 @@ class LoggerPlus:
 
     # remap log level string to int
     def level_str_to_int(self, arg):
+        print('(level_str_to_int) {}'.format(arg))
+        print('(level_str_to_int) {}'.for)
         """
         remapping logging.<level> into level as per logging package requirements
         TODO validate range, may be a simpler way

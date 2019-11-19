@@ -1,3 +1,18 @@
+# ######################################################################
+# 
+# Program:  _env.py
+# Language: Python ver 3
+# Author:   Bob
+#
+# Purpose:  Create global dictionary contains select global environment 
+#           variables
+#
+# History:  18Nov2019 Initial creation                               RNB
+#
+# Notes:
+#
+# ######################################################################
+
 import os
 import sys
 
